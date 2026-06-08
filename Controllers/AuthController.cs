@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using dotnet_realtime_chat.DTOs;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Azure.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace dotnet_realtime_chat.Controllers
 {
@@ -8,10 +11,12 @@ namespace dotnet_realtime_chat.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ILogger<AuthController> _logger;
+        private readonly AppDbContext _context;
 
-        public AuthController(ILogger<AuthController> logger)
+        public AuthController(ILogger<AuthController> logger, AppDbContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
         [HttpPost("register")]
@@ -19,19 +24,39 @@ namespace dotnet_realtime_chat.Controllers
         {
             _logger.LogInformation("User registering: {Username}", request.Username);
 
-            return Ok("User registered (dummy response)");
+            var user = new User
+            {
+                Name = request.Username,
+                Password = request.Password
+            };
+
+            _context.Users.Add(user);
+            _context.SaveChanges();
+
+            return Ok("User registered");
         }
 
         [HttpPost("login")]
         public IActionResult Login(LoginRequest request)
         {
-            _logger.LogInformation("User logging in: {Username}", request.Username);
+            _logger.LogInformation(
+                "User logging in: {Username}",
+                request.Username);
 
-            return Ok("Login sucessful (dummy response)");
+            var user = _context.Users
+                .FirstOrDefault(u => u.Name == request.Username);
+
+            if (user == null)
+            {
+                return BadRequest("Invalid username or password");
+            }
+
+            if (user.Password != request.Password)
+            {
+                return BadRequest("Invalid username or password");
+            }
+
+            return Ok("Login successful");
         }
-
-
-
-        
     }
 }
