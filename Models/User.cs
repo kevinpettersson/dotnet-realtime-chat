@@ -1,6 +1,7 @@
-public class User
+using Microsoft.AspNetCore.Identity;
+
+public class User : IdentityUser
 {
-    public int Id { get; set; }
-    public required string Name { get; set; }
-    public required string Password { get; set; }
+    public string? DisplayName { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

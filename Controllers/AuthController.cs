@@ -23,7 +23,7 @@ namespace dotnet_realtime_chat.Controllers
         public IActionResult Register(RegisterRequest request)
         {
             _logger.LogInformation("User registering: {Username}", request.Username);
-
+            /*
             var user = new User
             {
                 Name = request.Username,
@@ -32,6 +32,7 @@ namespace dotnet_realtime_chat.Controllers
 
             _context.Users.Add(user);
             _context.SaveChanges();
+            */
 
             return Ok("User registered");
         }
@@ -42,7 +43,7 @@ namespace dotnet_realtime_chat.Controllers
             _logger.LogInformation(
                 "User logging in: {Username}",
                 request.Username);
-
+            /*
             var user = _context.Users
                 .FirstOrDefault(u => u.Name == request.Username);
 
@@ -55,7 +56,7 @@ namespace dotnet_realtime_chat.Controllers
             {
                 return BadRequest("Invalid username or password");
             }
-
+            */
             return Ok("Login successful");
         }
     }
