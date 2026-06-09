@@ -55,7 +55,7 @@ namespace dotnet_realtime_chat.Controllers
                 request.Username,
                 request.Password,
                 isPersistent: false,
-                lockoutOnFailure: true
+                lockoutOnFailure: false
             );
 
             if (!result.Succeeded)
@@ -63,7 +63,7 @@ namespace dotnet_realtime_chat.Controllers
                 return Unauthorized("Invalid username or password");
             }
 
-            return Ok("Login successful" );
+            return Ok("Login successful");
         }
     }
 }
