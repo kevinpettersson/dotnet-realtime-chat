@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using dotnet_realtime_chat.DTOs;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
-using Azure.Identity;
 using Microsoft.AspNetCore.Identity;
 
 namespace dotnet_realtime_chat.Controllers
@@ -11,53 +9,61 @@ namespace dotnet_realtime_chat.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ILogger<AuthController> _logger;
-        private readonly AppDbContext _context;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
 
-        public AuthController(ILogger<AuthController> logger, AppDbContext context)
+        public AuthController(
+            ILogger<AuthController> logger, 
+            UserManager<User> userManager, 
+            SignInManager<User> signInManager)
         {
             _logger = logger;
-            _context = context;
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         [HttpPost("register")]
-        public IActionResult Register(RegisterRequest request)
+        public async Task<IActionResult> Register(RegisterRequest request)
         {
             _logger.LogInformation("User registering: {Username}", request.Username);
-            /*
-            var user = new User
-            {
-                Name = request.Username,
-                Password = request.Password
-            };
 
-            _context.Users.Add(user);
-            _context.SaveChanges();
-            */
+            var user = new User 
+            { 
+                UserName = request.Username,
+                CreatedAt = DateTime.UtcNow
+            };
+        
+            // Registers the user in the database
+            var result = await _userManager.CreateAsync(user, request.Password);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
 
             return Ok("User registered");
         }
 
         [HttpPost("login")]
-        public IActionResult Login(LoginRequest request)
+        public async Task<IActionResult> Login(LoginRequest request)
         {
             _logger.LogInformation(
                 "User logging in: {Username}",
                 request.Username);
-            /*
-            var user = _context.Users
-                .FirstOrDefault(u => u.Name == request.Username);
+            
+             var result = await _signInManager.PasswordSignInAsync(
+                request.Username,
+                request.Password,
+                isPersistent: false,
+                lockoutOnFailure: true
+            );
 
-            if (user == null)
+            if (!result.Succeeded)
             {
-                return BadRequest("Invalid username or password");
+                return Unauthorized("Invalid username or password");
             }
 
-            if (user.Password != request.Password)
-            {
-                return BadRequest("Invalid username or password");
-            }
-            */
-            return Ok("Login successful");
+            return Ok("Login successful" );
         }
     }
 }
