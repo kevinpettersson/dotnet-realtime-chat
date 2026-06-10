@@ -11,17 +11,20 @@ namespace dotnet_realtime_chat.Controllers
         private readonly ILogger<AuthController> _logger;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly IJwtTokenService _tokenService;
 
         public AuthController(
             ILogger<AuthController> logger, 
             UserManager<User> userManager, 
-            SignInManager<User> signInManager)
+            SignInManager<User> signInManager,
+            IJwtTokenService tokenService)
         {
             _logger = logger;
             _userManager = userManager;
             _signInManager = signInManager;
+            _tokenService = tokenService;
         }
-
+        
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
@@ -47,23 +50,24 @@ namespace dotnet_realtime_chat.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            _logger.LogInformation(
-                "User logging in: {Username}",
-                request.Username);
+            _logger.LogInformation("User logging in: {Username}", request.Username);
             
-             var result = await _signInManager.PasswordSignInAsync(
-                request.Username,
-                request.Password,
-                isPersistent: false,
-                lockoutOnFailure: false
-            );
+            // find the user in the databse
+            var user = await _userManager.FindByNameAsync(request.Username);
 
-            if (!result.Succeeded)
-            {
+            if (user == null)
                 return Unauthorized("Invalid username or password");
-            }
 
-            return Ok("Login successful");
+            // verify the given password in the database
+            var passwordValid = await _userManager.CheckPasswordAsync(user, request.Password);
+
+            if (!passwordValid)
+                return Unauthorized("Invalid username or password");
+
+            // generate a JWT token for the user
+            var token = _tokenService.GenerateToken(user);
+
+            return Ok(new { token });
         }
     }
 }
