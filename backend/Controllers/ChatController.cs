@@ -1,6 +1,7 @@
 using dotnet_realtime_chat.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace dotnet_realtime_chat.Controllers
 {
@@ -10,11 +11,11 @@ namespace dotnet_realtime_chat.Controllers
     public class ChatController : ControllerBase
     {
 
-        private readonly ChatHub _chatHub;
+        private readonly IHubContext<ChatHub> _hub;
 
-        public ChatController(ChatHub chatHub)
+        public ChatController(IHubContext<ChatHub> hub)
         {
-            _chatHub = chatHub;
+            _hub = hub;
         }
 
         [HttpGet("me")]
@@ -26,15 +27,6 @@ namespace dotnet_realtime_chat.Controllers
                 Name = User.Identity?.Name,
                 Claims = User.Claims.Select(c => new { c.Type, c.Value })
             });
-        }
-
-        [HttpPost("send")]
-        public async Task SendMessage(String message)
-        {
-            var user = User.Identity?.Name;
-
-            return await _chatHub.SendMessage(user, message);
-            
         }
 
     }

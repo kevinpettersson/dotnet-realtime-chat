@@ -7,15 +7,34 @@ namespace dotnet_realtime_chat.Services;
     public class ChatHub : Hub
     {
 
+        public String? GetUsername()
+        {
+            return Context.User?.Identity?.Name ?? "Unknown";
+        }
+
         public override async Task OnConnectedAsync()
         {
-            await Clients.All.SendAsync("ReceiveSystemMessage", $"{Context.UserIdentifier} joined.");
+            await Clients.All.SendAsync("UserJoined", $"{GetUsername()} joined.");
             
             await base.OnConnectedAsync();
         }
 
-        public async Task SendMessage(string user, string message)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
+            await Clients.All.SendAsync("UserLeft", $"{GetUsername()} disconnected.");
+
+            await base.OnDisconnectedAsync(exception);
         }
+
+        public async Task SendMessage(string message)
+        {
+            await Clients.All.SendAsync("ReceiveMessage", GetUsername(), message);
+        }
+
+        public async Task Typing()
+        {
+            await Clients.All.SendAsync("IsTyping", $"{GetUsername()} is typing...");
+        }
+
+
     }
