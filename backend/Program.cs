@@ -75,6 +75,9 @@ builder.Services.AddAuthentication(options =>
 // Add JwtToken Service to the scope
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
+// Add Message service to the scope
+builder.Services.AddScoped<IMessageService, MessageService>();
+
 // Add SignalR to the scope
 builder.Services.AddSignalR();
 

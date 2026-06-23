@@ -11,22 +11,19 @@ namespace dotnet_realtime_chat.Controllers
     public class ChatController : ControllerBase
     {
 
-        private readonly IHubContext<ChatHub> _hub;
+        private readonly IMessageService _messageService;
 
-        public ChatController(IHubContext<ChatHub> hub)
+        public ChatController(IMessageService messageService)
         {
-            _hub = hub;
+            _messageService = messageService;
         }
 
-        [HttpGet("me")]
-        public IActionResult Me()
+        [HttpGet("history")]
+        public async Task<IActionResult> History()
         {
-            return Ok(new
-            {
-                IsAuthenticated = User.Identity?.IsAuthenticated,
-                Name = User.Identity?.Name,
-                Claims = User.Claims.Select(c => new { c.Type, c.Value })
-            });
+            var messages = await _messageService.GetHistoryAsync();
+
+            return Ok(messages);
         }
 
     }

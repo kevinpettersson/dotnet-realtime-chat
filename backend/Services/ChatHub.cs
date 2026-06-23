@@ -7,7 +7,14 @@ namespace dotnet_realtime_chat.Services;
     public class ChatHub : Hub
     {
 
-        public String? GetUsername()
+        private readonly IMessageService _messageService;
+
+        public ChatHub(IMessageService messageService)
+        {
+            _messageService = messageService;
+        }
+
+        private string GetUsername()
         {
             return Context.User?.Identity?.Name ?? "Unknown";
         }
@@ -28,6 +35,15 @@ namespace dotnet_realtime_chat.Services;
 
         public async Task SendMessage(string message)
         {
+            Message _message = new Message 
+            {
+                Content = message,
+                SenderId = Context.UserIdentifier,
+                SentAt = DateTime.Now
+            };
+
+            await _messageService.SaveMessageAsync(_message);
+
             await Clients.All.SendAsync("ReceiveMessage", GetUsername(), message);
         }
 
